@@ -1,57 +1,42 @@
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
-import datetime
+from datetime import date, datetime, time, timedelta
 
 
 class AdminModel(BaseModel):
     name: str = Field(...)
     password: str = Field(...)
-    email: Optional[EmailStr] = None
+    email: EmailStr = None
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "admin",
-                "password": "secure password"
-            }
-        }
 
 class UpdateAdminPasswordModel(AdminModel):
     new_password: str = Field(...)
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "admin",
-                "password": "old password",
-                "new_password": "new secure password"
-            }
-        }
 
 class ClientModel(BaseModel):
     name: str = Field(...)
     email: EmailStr = None
-    # signup_ts: Optional[datetime] = None
-    token_history: Optional[List[str]] = []
-    active_token: Optional[str] = None
+    signup: datetime = None
+    token_history: List[str] = []
+    active_token: str = None
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "CollectivaT",
-                "email": "user@collectivat.cat"
-            }
-        }
+class UpdateClientModel(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+class DeleteClientModel(BaseModel):
+    name: str = Field(...)
 
 class TokenModel(BaseModel):
     token: str = Field(unique=True)
     client: str = Field(...)
-    expiry: Optional[str] = Field(...)
+    creation_date: datetime
+    toss_date: datetime
+    expiry: str = None
     active: bool = Field(...)
 
-class GenerateTokenModel(BaseModel):
-    client: str = Field(...)
-    expiry: Optional[str] = Field(...)
+class GenerateTokenWithExpiryModel(BaseModel):
+    expiry: str = None
 
 class RevokeTokenModel(BaseModel):
     client: str = Field(...)

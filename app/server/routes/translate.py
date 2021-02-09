@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 from fastapi import Header, APIRouter, HTTPException
 from pydantic import BaseModel, Field
 import httpx
@@ -26,12 +26,32 @@ class ServiceRequest(BaseModel):
 
 
 class SentenceResponse(BaseModel):
-    translation: Optional[str]
+    translation: str
     usage: int
 
 class BatchResponse(BaseModel):
-    translation: Optional[List[str]]
+    translation: List[str]
     usage: int
+
+class LanguagesResponse(BaseModel):
+    languages: Dict
+
+@router.get ("/")
+async def languages():
+    translate_url = mt_service_url + "/translate/languages"
+    try:
+        r = httpx.get(translate_url)
+    except httpx.HTTPError as exc:
+        print(f"Error while requesting {exc.request.url!r}.")
+        print(exc)
+        return ErrorResponseModel("Internal request error", 404, "Translate service unavailable")
+
+    if r.status_code == 200:
+        response = r.json()
+        languages_response = LanguagesResponse(languages=response['languages'])
+        return languages_response
+    else:
+        return ErrorResponseModel("Translate service error", 404, r.json()['detail'])
 
 
 @router.post('/', status_code=200)
@@ -46,23 +66,29 @@ async def translate(request: ServiceRequest):
     batch_request = False
     if request.text:
         translate_service_url = mt_service_url + "/translate"
-        print(translate_service_url)
 
-        # payload="{\"src\":\"%s\", \"tgt\":\"%s\", \"text\":\"%s\", \"token\":\"%s\"}"%(request.src, 
-        #                                                                            request.tgt, 
-        #                                                                            request.text, 
-        #                                                                            request.token)
-        payload="{\"src\":\"%s\", \"tgt\":\"%s\", \"text\":\"%s\"}"%(request.src, 
-                                                                     request.tgt, 
-                                                                     request.text)
+        if request.alt:
+            payload="{\"src\":\"%s\", \"tgt\":\"%s\", \"alt\":\"%s\" , \"text\":\"%s\"}"%(request.src, 
+                                                                                          request.tgt, 
+                                                                                          request.alt,
+                                                                                          request.text)
+        else:
+            payload="{\"src\":\"%s\", \"tgt\":\"%s\", \"text\":\"%s\" }"%(request.src, 
+                                                                         request.tgt, 
+                                                                         request.text)
         usage = len(request.text.split())
 
     elif request.batch:
         batch_request = True
         translate_service_url = mt_service_url + "/translate/batch"
-        print(translate_service_url)
 
-        payload="{\"src\":\"%s\", \"tgt\":\"%s\", \"texts\":%s}"%(request.src, 
+        if request.alt:
+            payload="{\"src\":\"%s\", \"tgt\":\"%s\", \"alt\":\"%s\" , \"texts\":%s}"%(request.src, 
+                                                                                       request.tgt, 
+                                                                                       request.alt,
+                                                                                       str(request.batch).replace("'",'"'))
+        else:
+            payload="{\"src\":\"%s\", \"tgt\":\"%s\", \"texts\":%s}"%(request.src, 
                                                                       request.tgt, 
                                                                       str(request.batch).replace("'",'"'))
 

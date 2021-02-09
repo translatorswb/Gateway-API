@@ -3,6 +3,7 @@ def client_helper(client) -> dict:
         "id": str(client['_id']),
         "name": client['name'],
         "email": client['email'],
+        "signup_date": client['signup'],
         "active_token": client['active_token'],
         "token_history_count": len(client['token_history'])
     }
@@ -18,6 +19,8 @@ def token_helper(token) -> dict:
         "id": str(token['_id']),
         "client": str(token['client']),
         "token": str(token['token']),
+        "creation": str(token['creation_date']),
+        "toss": str(token['toss_date']),
         "expiry": token['expiry'],
         "active": token['active']
     }

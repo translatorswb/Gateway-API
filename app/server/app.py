@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
 from passlib.context import CryptContext
+import os
 
 from .auth.jwt_bearer import JWTBearer
 from .routes.client import router as ClientRouter
@@ -9,12 +10,16 @@ from .routes.translate import router as TranslateRouter
 
 from .database.database import add_admin, check_superadmin
 
-app = FastAPI()
+app = FastAPI(openapi_url="/api/v1/openapi.json", docs_url="/api/v1/docs")
 
 token_listener = JWTBearer()
 hash_helper = CryptContext(schemes=["bcrypt"])
 
-init_admin = {"name": "superadmin", "password": "test123"}
+#Add initial superadmin
+init_admin_name = os.environ.get('INIT_ADMIN_NAME') or "superadmin"
+init_admin_pass = os.environ.get('INIT_ADMIN_PASS') or "test123"
+
+init_admin = {"name": init_admin_name, "password": init_admin_pass}
 
 @app.on_event("startup")
 async def startup():

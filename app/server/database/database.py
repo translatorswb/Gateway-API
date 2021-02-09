@@ -3,6 +3,7 @@ from bson import ObjectId
 from decouple import config
 from passlib.context import CryptContext
 from fastapi import HTTPException
+from datetime import datetime
 
 from app.server.database.database_helper import client_helper, admin_helper, token_helper
 
@@ -54,40 +55,62 @@ async def retrieve_clients():
 async def add_client(client_data: dict) -> dict:
     client = await client_collection.find_one({"name": client_data['name']})
     if not client:
+        client_data['signup'] = datetime.now()
         client = await client_collection.insert_one(client_data)
         new_client = await client_collection.find_one({"_id": client.inserted_id})
         return client_helper(new_client)
     else:
         return False
 
+async def delete_client(client_name: str):
+    client = await client_collection.find_one({"name": client_name})
+    # deactivated_token = None
+    if client:
+        await client_collection.delete_one({"name": client_name})
 
-# async def retrieve_client(id: str) -> dict:
-#     client = await client_collection.find_one({"_id": ObjectId(id)})
-#     if client:
-#         return client_helper(client)
-#     else:
-#         return False
+        async for token in token_collection.find({'client': client_name}):
+            
+            token, status = await deactivate_token(token['token'])
+            if token:
+                # deactivated_token = token['token']
+                print("Deactivated a token")
+
+        return True
+    else:
+        print("Client not found")
+        return False
 
 
-# async def delete_client(id: str):
-#     client = await client_collection.find_one({"_id": ObjectId(id)})
-#     if client:
-#         await client_collection.delete_one({"_id": ObjectId(id)})
-#         return True
+async def retrieve_client(name: str) -> dict:
+    client = await client_collection.find_one({"name": name})
+    if client:
+        return client_helper(client)
+    else:
+        return False
 
 
-# async def update_client_data(id: str, data: dict):
-#     client = await client_collection.find_one({"_id": ObjectId(id)})
-#     if client:
-#         client_collection.update_one({"_id": ObjectId(id)}, {"$set": data})
-#         return True
-
+async def update_client_data(name: str, data: dict):
+    print(data)
+    client = await client_collection.find_one({"name": name})
+    if client and data:
+        client_collection.update_one({"name": name}, {"$set": data})
+        if 'name' in data:
+            updated_client = await client_collection.find_one({"name": data['name']})
+        else:
+            updated_client = await client_collection.find_one({"name": name})
+        return client_helper(updated_client)
+    else:
+        return False
 #Token operations
 
-async def retrieve_tokens():
+async def retrieve_tokens(only_active=False):
     tokens = []
     async for token in token_collection.find():
-        tokens.append(token_helper(token))
+        if only_active:
+            if token['active']:
+                tokens.append(token_helper(token))
+        else:
+            tokens.append(token_helper(token))
     return tokens
 
 async def generate_token(token_data: dict) -> dict:
@@ -95,11 +118,12 @@ async def generate_token(token_data: dict) -> dict:
     if client:
         client_deactivation = await deactivate_client_token(token_data['client'])
         if client_deactivation:
-            existing_token = await token_collection.find_one({"token": client['active_token']})
-            token_collection.update_one({"token": existing_token['token']}, {"$set": {"active":False}})
+            token, status = await deactivate_token(client['active_token'])
         
         #make new token with expiry date
         token_data['active']=True
+        token_data['creation_date'] = datetime.now()
+        token_data['toss_date'] = None
         token = await token_collection.insert_one(token_data)
         new_token = await token_collection.find_one({"_id": token.inserted_id})
 
@@ -127,7 +151,7 @@ async def deactivate_token(tokenstr:str):
     token = await token_collection.find_one({"token": tokenstr})
     if token:
         if token['active']:
-            token_collection.update_one({"token": tokenstr}, {"$set": {"active":False}})
+            token_collection.update_one({"token": tokenstr}, {"$set": {"active":False, "toss_date":datetime.now()}})
             token = await token_collection.find_one({"token": tokenstr})
             return token_helper(token), {'detail': 'Success'}
         else:
