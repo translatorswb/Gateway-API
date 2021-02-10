@@ -22,6 +22,7 @@ def token_helper(token) -> dict:
         "creation": str(token['creation_date']),
         "toss": str(token['toss_date']),
         "expiry": token['expiry'],
-        "active": token['active']
+        "active": token['active'],
+        "services": token['services']
     }
 

@@ -32,11 +32,13 @@ class TokenModel(BaseModel):
     client: str = Field(...)
     creation_date: datetime
     toss_date: datetime
-    expiry: str = None
+    expiry: str = None  #not implemented yet
     active: bool = Field(...)
+    services: List[str] = []
 
-class GenerateTokenWithExpiryModel(BaseModel):
+class GenerateTokenModel(BaseModel):
     expiry: str = None
+    services: List[str] = ['translate']
 
 class RevokeTokenModel(BaseModel):
     client: str = Field(...)

@@ -120,10 +120,11 @@ async def generate_token(token_data: dict) -> dict:
         if client_deactivation:
             token, status = await deactivate_token(client['active_token'])
         
-        #make new token with expiry date
+        #make new token
         token_data['active']=True
         token_data['creation_date'] = datetime.now()
         token_data['toss_date'] = None
+
         token = await token_collection.insert_one(token_data)
         new_token = await token_collection.find_one({"_id": token.inserted_id})
 

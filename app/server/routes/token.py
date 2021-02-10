@@ -2,11 +2,13 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from app.server.database.database import *
-from app.server.models.models import TokenModel, GenerateTokenWithExpiryModel, RevokeTokenModel, ResponseModel, ErrorResponseModel
+from app.server.models.models import TokenModel, GenerateTokenModel, RevokeTokenModel, ResponseModel, ErrorResponseModel
 
 import secrets
 
 router = APIRouter()
+
+SERVICES_LIST = ['translate', 'diarization']
 
 @router.get("/", response_description="Tokens retrieved")
 async def see_tokens():
@@ -23,20 +25,15 @@ async def see_active_tokens():
         else ResponseModel(tokens, "Empty list returned")
 
 @router.post("/{client_name}", response_description="Token generated")
-async def new_token(client_name: str):
-    token_dict = {"client":client_name, "token":secrets.token_urlsafe(), "expiry":None}
+async def new_token_with_info(client_name: str, token_request: GenerateTokenModel = Body(...)):
+    #TODO: Parse expiry date
 
-    token_data = await generate_token(token_dict)
-    if token_data:
-        return ResponseModel(token_data, "Token added successfully.")
-    else:
-        return ErrorResponseModel("Token not generated", 404,"Client doesn't exist: %s"%client_name)
+    #Parse services list
+    not_implemented = [s for s in token_request.services if s not in SERVICES_LIST]
+    if not_implemented:
+        return ErrorResponseModel("Token not generated", 404,"Services not implemented: %s"%not_implemented)
 
-@router.post("/{client_name}", response_description="Token generated with expiration")
-async def new_token_with_expiry(token_request: GenerateTokenWithExpiryModel = Body(...)):
-    #TODO: Parse expiry
-
-    token_dict = {"client":client_name, "token":secrets.token_urlsafe(), "expiry":token_request.expiry}
+    token_dict = {"client":client_name, "token":secrets.token_urlsafe(), "expiry":token_request.expiry, "services":token_request.services}
 
     token_data = await generate_token(token_dict)
     if token_data:
