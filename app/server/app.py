@@ -10,7 +10,9 @@ from .routes.translate import router as TranslateRouter
 
 from .database.database import add_admin, check_superadmin
 
-app = FastAPI(openapi_url="/api/v1/openapi.json", docs_url="/api/v1/docs")
+ROOT_PATH = '/' + os.environ.get('PROXY_PREFIX') if os.environ.get('PROXY_PREFIX') else None
+
+app = FastAPI(root_path=ROOT_PATH, redoc_url="/v1/redoc", openapi_url="/v1/openapi.json", docs_url="/v1/docs")
 
 token_listener = JWTBearer()
 hash_helper = CryptContext(schemes=["bcrypt"])
@@ -35,7 +37,7 @@ async def startup():
 #     await database.disconnect()
 
 
-app.include_router(AdminRouter, tags=["Administrator"], prefix="/api/v1/admin")
-app.include_router(ClientRouter, tags=["Clients"], prefix="/api/v1/client", dependencies=[Depends(token_listener)])
-app.include_router(TokenRouter, tags=["Tokens"], prefix="/api/v1/token", dependencies=[Depends(token_listener)])
-app.include_router(TranslateRouter, tags=["Translate"], prefix="/api/v1/translate")
+app.include_router(AdminRouter, tags=["Administrator"], prefix="/v1/admin")
+app.include_router(ClientRouter, tags=["Clients"], prefix="/v1/client", dependencies=[Depends(token_listener)])
+app.include_router(TokenRouter, tags=["Tokens"], prefix="/v1/token", dependencies=[Depends(token_listener)])
+app.include_router(TranslateRouter, tags=["Translate"], prefix="/v1/translate")
