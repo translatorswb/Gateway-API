@@ -12,7 +12,11 @@ from .database.database import add_admin, check_superadmin
 
 ROOT_PATH = '/' + os.environ.get('PROXY_PREFIX') if os.environ.get('PROXY_PREFIX') else None
 
-app = FastAPI(root_path=ROOT_PATH, redoc_url="/v1/redoc", openapi_url="/v1/openapi.json", docs_url="/v1/docs")
+app = FastAPI(title="Gamayun API",
+    		  description="API gateway for TWB's language technology services",
+              version="0.9", 
+              root_path=ROOT_PATH, 
+              redoc_url="/redoc", openapi_url="/openapi.json", docs_url="/docs")
 
 token_listener = JWTBearer()
 hash_helper = CryptContext(schemes=["bcrypt"])
@@ -37,7 +41,7 @@ async def startup():
 #     await database.disconnect()
 
 
-app.include_router(AdminRouter, tags=["Administrator"], prefix="/v1/admin")
-app.include_router(ClientRouter, tags=["Clients"], prefix="/v1/client", dependencies=[Depends(token_listener)])
-app.include_router(TokenRouter, tags=["Tokens"], prefix="/v1/token", dependencies=[Depends(token_listener)])
+app.include_router(AdminRouter, tags=["Administrator"], prefix="/admin")
+app.include_router(ClientRouter, tags=["Clients"], prefix="/client", dependencies=[Depends(token_listener)])
+app.include_router(TokenRouter, tags=["Tokens"], prefix="/token", dependencies=[Depends(token_listener)])
 app.include_router(TranslateRouter, tags=["Translate"], prefix="/v1/translate")
