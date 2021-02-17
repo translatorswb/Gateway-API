@@ -37,6 +37,7 @@ class BatchResponse(BaseModel):
 
 class LanguagesResponse(BaseModel):
     languages: Dict
+    models: Dict
 
 @router.get ("/")
 async def languages():
@@ -50,7 +51,7 @@ async def languages():
 
     if r.status_code == 200:
         response = r.json()
-        languages_response = LanguagesResponse(languages=response['languages'])
+        languages_response = LanguagesResponse(languages=response['languages'], models=response['models'])
         return languages_response
     else:
         return ErrorResponseModel("Translate service error", 500, r.json()['detail'])
