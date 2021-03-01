@@ -14,7 +14,7 @@ MT_API_HOST_URL = 'http://localhost:8001/api/v1'
 mt_service_url = os.environ.get('MT_API_HOST_URL') or MT_API_HOST_URL
 
 SERVICE_ID = 'translate'
-FAKE_GUI_TOKEN = {'client':'GUI', 'token':None}
+FAKE_GUI_TOKEN = {'client':'GUI', 'token':None} #TODO: register this in a separate table
 
 @app.get("/")
 def form_post(request: Request):
@@ -38,7 +38,7 @@ async def form_post(request: Request, message: str = Form(...)):
         return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
 
     usage_load = len(message.split())
-    await register_usage(FAKE_GUI_TOKEN, SERVICE_ID, usage_load)
+    await register_usage(FAKE_GUI_TOKEN, SERVICE_ID, usage_load)  #TODO: register this in a separate table (register_gui_usage)
 
     if r.status_code == 200:
         response = r.json()
