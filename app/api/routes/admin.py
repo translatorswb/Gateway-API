@@ -3,11 +3,11 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.security import HTTPBasicCredentials
 from passlib.context import CryptContext
 
-from app.server.auth.admin import validate_login
-from app.server.auth.jwt_handler import signJWT
-from app.server.database.database import add_admin, check_superadmin, change_admin_password
-from app.server.models.models import AdminModel, UpdateAdminPasswordModel, ResponseModel, ErrorResponseModel
-from app.server.auth.jwt_bearer import JWTBearer
+from app.api.auth.admin import validate_login
+from app.api.auth.jwt_handler import signJWT
+from app.api.database.database import add_admin, check_superadmin, change_admin_password, retrieve_admins, update_admin_data, delete_admin
+from app.api.models.models import AdminModel, UpdateAdminPasswordModel, ResponseModel, ErrorResponseModel, UpdateAdminModel
+from app.api.auth.jwt_bearer import JWTBearer
 
 router = APIRouter()
 token_listener = JWTBearer()
@@ -45,3 +45,29 @@ async def add_new_admin(admin: AdminModel = Body(...)):
     else:
         #raise HTTPException(status_code=401, detail="Duplicate name: %s"%admin['name'])
         return ErrorResponseModel("Request error", 404, "Duplicate name: %s"%admin.name)
+
+    
+@router.get("/", response_description="Admins retrieved")
+async def get_admins():
+    admins = await retrieve_admins()
+    return ResponseModel(admins, "Admins data retrieved successfully") \
+        if len(admins) > 0 \
+        else ResponseModel(admins, "Empty list returned")
+
+@router.put("/{admin_name}")
+async def update_admin(admin_name: str, req: UpdateAdminModel = Body(...)):
+    updatedict = {a:req.dict()[a] for a in req.dict() if req.dict()[a]}
+    updated_admin = await update_admin_data(admin_name, updatedict)
+    if updated_admin:
+        return ResponseModel(updated_admin, "Admin updated successfully.")
+    else:
+        return ErrorResponseModel("An error occurred", 404, "There was an error updating the admin.")
+    
+@router.delete("/{admin_name}", response_description="Admin data deleted from the database")
+async def delete_admin_data(admin_name: str):
+    deleted_admin, status = await delete_admin(admin_name)
+    return ResponseModel("Admin with name %s removed"%admin_name, "Admin deleted successfully from database") \
+        if deleted_admin \
+        else ErrorResponseModel("An error occured", 404, status)
+
+

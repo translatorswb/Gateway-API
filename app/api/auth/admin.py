@@ -3,9 +3,9 @@ from fastapi.security import HTTPBasicCredentials, HTTPBasic
 from passlib.context import CryptContext
 import pprint
 
-from app.server.database.database import admin_collection
-from app.server.database.database_helper import admin_helper
-from app.server.models.models import AdminModel
+from app.api.database.database import admin_collection
+from app.api.database.database_helper import admin_helper
+from app.api.models.models import AdminModel
 
 security = HTTPBasic()
 hash_helper = CryptContext(schemes=["bcrypt"])

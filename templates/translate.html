@@ -1,0 +1,73 @@
+<html>
+<head>
+
+<style>
+.flask-pagedown-input {
+}
+.flask-pagedown-preview {
+    border: 1px dotted black;
+    background-color: #f0f0f0;
+}
+body {
+  border-radius: 5px;
+  background-color: #FDFDFD;
+  padding: 20px;
+}
+.content {
+  max-width: 500px;
+  margin: auto;
+}
+.textarea {
+  width: 100%;
+  height: 100px;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+  font-size:90%;
+}
+.button {
+  font-size:100%;
+  cursor: pointer;
+}
+</style>
+<title>PunkProse</title>
+</head>
+<body>
+    <div class="content" style="width: 500px;">
+        <h1 background-color: #FCFCFC;>TWB MT API Demo</h1>
+        <hr>
+        <br>
+        <form method="POST">
+          <div style="text-align:center;">
+          <label>Language</label>
+          <select id="type" name="type">
+              <option value="text" {% if type == "text"%} selected {% endif %}>Text Input</option>
+              <option value="json" {% if type == "json"%} selected {% endif %}>JSON Input</option>
+          </select>
+          <br>
+          <!-- <textarea name=“message” rows=“30” cols=“100” style="overflow:scroll;"></textarea> -->
+          <input type="textarea" name="message" rows=“30” cols=“100” style="overflow:scroll;"/>
+          <br>  
+          <input type="submit" value="submit"> 
+
+        </form>
+        {% if text1 %}
+
+        <hr>
+
+        <div>
+            <div class="textarea" style="overflow:scroll;">{{ text1 }}</div>
+        </div>
+        {% endif %}
+        {% if text2 %}
+        <hr>
+        <div>
+            <p>Readable</p>
+            <div class="textarea" style="overflow:scroll;">{{ text2 }}</div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

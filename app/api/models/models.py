@@ -8,10 +8,12 @@ class AdminModel(BaseModel):
     password: str = Field(...)
     email: EmailStr = None
 
-
 class UpdateAdminPasswordModel(AdminModel):
     new_password: str = Field(...)
 
+class UpdateAdminModel(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 class ClientModel(BaseModel):
     name: str = Field(...)
@@ -42,6 +44,13 @@ class GenerateTokenModel(BaseModel):
 
 class RevokeTokenModel(BaseModel):
     client: str = Field(...)
+
+class UsageModel(BaseModel):
+    client: str = Field(...)
+    token: str = Field(...)
+    date: datetime = datetime.now()
+    service: str = Field(...)
+    load: int = Field(...)
 
 def ResponseModel(data, message):
     return {

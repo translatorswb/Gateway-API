@@ -12,7 +12,9 @@ def admin_helper(admin) -> dict:
     return {
         "id": str(admin['_id']),
         "name": admin['name'],
+        "email": admin['email']
     }
+
 
 def token_helper(token) -> dict:
     return {

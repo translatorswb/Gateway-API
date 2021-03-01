@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
-from app.server.database.database import *
-from app.server.models.models import ClientModel, UpdateClientModel, ResponseModel, ErrorResponseModel
+from app.api.database.database import retrieve_clients, add_client, retrieve_client, delete_client, update_client_data
+from app.api.models.models import ClientModel, UpdateClientModel, ResponseModel, ErrorResponseModel
 
 router = APIRouter()
 

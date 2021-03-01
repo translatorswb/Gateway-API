@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from fastapi import HTTPException
 from datetime import datetime
 
-from app.server.database.database_helper import client_helper, admin_helper, token_helper
+from app.api.database.database_helper import client_helper, admin_helper, token_helper
 
 MONGO_DETAILS = config('MONGO_DETAILS')
 
@@ -18,6 +18,7 @@ database = client.gamayunapi
 client_collection = database.get_collection('clients')
 admin_collection = database.get_collection('admins')
 token_collection = database.get_collection('tokens')
+usage_collection = database.get_collection('usage')
 
 #Admin operations
 async def check_superadmin():
@@ -42,6 +43,38 @@ async def add_admin(admin_data: dict) -> dict:
         new_admin = await admin_collection.find_one({"_id": admin.inserted_id})
         return admin_helper(new_admin)
     return False
+
+async def retrieve_admins():
+    admins = []
+    async for admin in admin_collection.find():
+        admins.append(admin_helper(admin))
+    return admins
+
+async def update_admin_data(name: str, data: dict):
+    admin = await admin_collection.find_one({"name": name})
+    if admin and data:
+        admin_collection.update_one({"name": name}, {"$set": data})
+        if 'name' in data:
+            updated_admin = await admin_collection.find_one({"name": data['name']})
+        else:
+            updated_admin = await admin_collection.find_one({"name": name})
+        return admin_helper(updated_admin)
+    else:
+        return False
+
+async def delete_admin(admin_name: str):
+    admin = await admin_collection.find_one({"name": admin_name})
+    if admin:
+        no_admins = await admin_collection.count_documents({})
+        print("No admins", no_admins)
+        if no_admins == 1:
+            return False, {'detail': 'Cannot delete only admin'}
+
+        await admin_collection.delete_one({"name": admin_name})
+
+        return True, {'detail': 'Success'} 
+    else:
+        return False, {'detail': 'Admin not found'}
 
 #Client operations
 
@@ -101,6 +134,7 @@ async def update_client_data(name: str, data: dict):
         return client_helper(updated_client)
     else:
         return False
+
 #Token operations
 
 async def retrieve_tokens(only_active=False):
@@ -193,4 +227,50 @@ async def revoke_token(clientname:str):
             return False, {'detail': 'Client has no active token'}
     else:
         return False, {'detail': "Client with that name doesn't exist"}
+
+# Usage operations
+
+async def register_usage(token:dict, service: str, usage_load:dict) -> dict:
+    usage_data = {'client':token['client'], 'token':token['token'], 'date':datetime.now(), 'service':service, 'load':usage_load}
+    await usage_collection.insert_one(usage_data)
+
+async def query_usage(service: str, client: str = None, year: int = None, month: int = None):
+    
+
+    data_fields = ['load', 'date', 'token']
+    if not client and not year and not month:
+        cursor = usage_collection.find({'service': service})
+        data_fields = ['client'] + data_fields
+    elif not year and not month:
+        client_query = await client_collection.find_one({"name": client})
+        if not client_query:
+            return False, {'detail': "Client with that name doesn't exist"}
+
+        cursor = usage_collection.find({'service': service, 'client':client})
+    elif not month:
+        try:
+            start_limit = datetime(year, 1, 1)
+            end_limit = datetime(year+1, 1, 1)
+        except ValueError as e:
+            return False, {'detail': str(e)}
+        cursor = usage_collection.find({'service': service, 'client':client, 'date': {'$lt': end_limit, '$gt': start_limit}})
+    else:
+        try:
+            start_limit = datetime(year, month, 1)
+            end_limit = datetime(year, month+1, 1)
+        except ValueError as e:
+            return False, {'detail': str(e)}
+        cursor = usage_collection.find({'service': service, 'client':client, 'date': {'$lt': end_limit, '$gt': start_limit}})
+
+    total = 0
+    usage_list = []
+    async for document in cursor:
+        total += document['load']
+        usage_list.append({d:document[d] for d in data_fields})
+
+    result = {'Total': total, 'Details': usage_list}
+
+    return result, {'detail': 'Success'}
+
+    
     

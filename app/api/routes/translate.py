@@ -6,14 +6,14 @@ import os
 import json
 import re
 
-from app.server.database.database import *
-from app.server.models.models import ResponseModel, ErrorResponseModel
+from app.api.database.database import *
+from app.api.models.models import ResponseModel, ErrorResponseModel
+from app.api.database.database import check_token, register_usage
 
 router = APIRouter()
 
 MT_API_HOST_URL = 'http://localhost:8001/api/v1'
 mt_service_url = os.environ.get('MT_API_HOST_URL') or MT_API_HOST_URL
-mt_service_request_headers = {'Content-Type': 'application/json'}
 
 SERVICE_ID = 'translate'
 
@@ -25,7 +25,6 @@ class ServiceRequest(BaseModel):
     text: Optional[str] = None
     batch: Optional[List[str]] = None
     alt: Optional[str] = None  #for alternative models
-
 
 class SentenceResponse(BaseModel):
     translation: str
@@ -79,7 +78,8 @@ async def translate(request: ServiceRequest):
         else:
             json_data = {'src':request.src, 'tgt':request.tgt, 'text':request.text}
         
-        usage = len(request.text.split())
+        usage_load = len(request.text.split())
+        
 
     elif request.batch:
         batch_request = True
@@ -90,7 +90,7 @@ async def translate(request: ServiceRequest):
         else:
             json_data = {'src':request.src, 'tgt':request.tgt, 'alt':request.alt, 'texts':request.batch}
 
-        usage = sum([len(text.split()) for text in request.batch])
+        usage_load = sum([len(text.split()) for text in request.batch])
     else:
         return ErrorResponseModel("Request error", 400, "Need input in batch or text")
 
@@ -102,12 +102,15 @@ async def translate(request: ServiceRequest):
         return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
 
     if r.status_code == 200:
+        #Store usage
+        await register_usage(token, SERVICE_ID, usage_load)
+
         response = r.json()
         print(response)
         if batch_request:
-            service_response = BatchResponse(translation=response['translation'], usage=usage)
+            service_response = BatchResponse(translation=response['translation'], usage=usage_load)
         else:
-            service_response = SentenceResponse(translation=response['translation'], usage=usage)
+            service_response = SentenceResponse(translation=response['translation'], usage=usage_load)
         return service_response
     else:
         return ErrorResponseModel("Translate service error", 500, r.json()['detail'])

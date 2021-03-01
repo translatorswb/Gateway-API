@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.encoders import jsonable_encoder
 
-from app.server.database.database import *
-from app.server.models.models import TokenModel, GenerateTokenModel, RevokeTokenModel, ResponseModel, ErrorResponseModel
+from app.api.database.database import retrieve_tokens, generate_token, revoke_token
+from app.api.models.models import TokenModel, GenerateTokenModel, RevokeTokenModel, ResponseModel, ErrorResponseModel
 
 import secrets
 
