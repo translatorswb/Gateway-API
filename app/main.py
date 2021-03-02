@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from passlib.context import CryptContext
 import os
+from datetime import datetime
 
 from app.api.auth.jwt_bearer import JWTBearer
 from app.api.routes.client import router as ClientRouter
@@ -28,7 +29,7 @@ init_admin_name = os.environ.get('INIT_ADMIN_NAME') or "superadmin"
 init_admin_pass = os.environ.get('INIT_ADMIN_PASS') or "test123"
 
 init_admin = {"name": init_admin_name, "password": init_admin_pass, "email": None}
-init_gui_client = {"name":"GUI", "email":None}
+init_gui_client = {"name":"GUI", "email":None, "active_token":None, "token_history":[], "signup":datetime.now()}
 
 @app.on_event("startup")
 async def startup():

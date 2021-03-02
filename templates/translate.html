@@ -31,36 +31,45 @@ body {
   font-size:100%;
   cursor: pointer;
 }
+
 </style>
 <title>TWB MT</title>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 </head>
 <body>
     <div class="content" style="width: 500px;">
         <h1 background-color: #FCFCFC;>TWB MT API Demo</h1>
         <hr>
+
         <br>
-        <form method="POST">
+        <form id="myForm" method="POST">
           <div style="text-align:center;">
+
           <label>Language</label>
-          <select id="type" name="type">
-              <option value="text" {% if type == "text"%} selected {% endif %}>Text Input</option>
-              <option value="json" {% if type == "json"%} selected {% endif %}>JSON Input</option>
+          <select id="srcbox" name="src">
+             {% for key, value in api_models.items() %}
+                <option value={{key}} {% if src == key %} selected {% endif %} >{{ api_languages[key] }}</option>
+             {% endfor %}
+
+              <!-- <option value="fr" {% if type == "text"%} selected {% endif %}>French</option> -->
+          </select>
+          <select id="tgtbox" name="tgt">
+             {% for key, value in api_models[src].items() %}
+                <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option>
+             {% endfor %}
           </select>
           <br>
-          <!-- <textarea name=“message” rows=“30” cols=“100” style="overflow:scroll;"></textarea> -->
-          <input type="textarea" name="message" rows=“30” cols=“100” style="overflow:scroll;"/>
+          <textarea name="message" rows="10" cols="60" wrap="soft">{{ source }}</textarea>
           <br>  
-          <input type="submit" value="submit"> 
+          <input type="submit" value="Translate"> 
 
         </form>
-        {% if text1 %}
 
         <hr>
 
         <div>
             <div class="textarea" style="overflow:scroll;">{{ text1 }}</div>
         </div>
-        {% endif %}
         {% if text2 %}
         <hr>
         <div>
@@ -69,5 +78,28 @@ body {
         </div>
         {% endif %}
     </div>
+
+<script>
+  $('#srcbox').on('change', function(){
+    console.log($('#srcbox').val());
+    $(this).closest('form').submit();
+    
+    // $('#tgtbox').html('');
+    // // $('#tgt').append('{% for key, value in api_models[src].items() %} <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option> {% endfor %}');
+    // $('#tgtbox').append('{% for key, value in api_models["xx"].items() %} <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option> {% endfor %}');
+    // console.log($('#tgtbox').val());
+    // if($('#typeOfGlass').val()==15){
+        
+    //     $('#glassWidth').append('<option value="20">20</option>');
+    //     $('#glassWidth').append('<option value="21">21</option>');
+    // }else{
+    //     $('#glassWidth').append('<option value="6">6</option>');
+    //     $('#glassWidth').append('<option value="7">7</option>');
+    //     $('#glassWidth').append('<option value="8">8</option>');
+    //     $('#glassWidth').append('<option value="9">9</option>');
+    // }
+});
+</script>
+
 </body>
 </html>

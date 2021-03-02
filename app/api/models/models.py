@@ -48,7 +48,7 @@ class RevokeTokenModel(BaseModel):
 class UsageModel(BaseModel):
     client: str = Field(...)
     token: str = Field(...)
-    date: datetime = datetime.now()
+    date: datetime = Field(...)
     service: str = Field(...)
     load: int = Field(...)
 
