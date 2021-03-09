@@ -56,4 +56,4 @@ app.include_router(ClientRouter, tags=["Clients"], prefix="/client", dependencie
 app.include_router(TokenRouter, tags=["Tokens"], prefix="/token", dependencies=[Depends(token_listener)])
 app.include_router(UsageRouter, tags=["Usage"], prefix="/usage", dependencies=[Depends(token_listener)])
 app.include_router(TranslateRouter, tags=["Translate"], prefix="/v1/translate")
-app.include_router(TranslateGUI, tags=["Translate GUI"], prefix='/gui/mt')
+app.include_router(TranslateGUI, tags=["Translate GUI"], prefix='/mt')

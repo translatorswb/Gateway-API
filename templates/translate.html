@@ -43,23 +43,25 @@ body {
 
         <br>
         <form id="myForm" method="POST">
-          <div style="text-align:center;">
+          <!-- <div style="text-align:center;"> -->
 
           <label>Language</label>
-          <select id="srcbox" name="src">
+          <select id="srcbox" name="src" style="width:100px;">
              {% for key, value in api_models.items() %}
                 <option value={{key}} {% if src == key %} selected {% endif %} >{{ api_languages[key] }}</option>
              {% endfor %}
 
               <!-- <option value="fr" {% if type == "text"%} selected {% endif %}>French</option> -->
           </select>
-          <select id="tgtbox" name="tgt">
-             {% for key, value in api_models[src].items() %}
-                <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option>
-             {% endfor %}
+          <select id="tgtbox" name="tgt" style="width:100px;">
+              {% if src in api_models %}
+               {% for key, value in api_models[src].items() %}
+                  <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option>
+               {% endfor %}
+              {% endif %}
           </select>
           <br>
-          <textarea name="message" rows="10" cols="60" wrap="soft">{{ source }}</textarea>
+          <textarea class="textarea" name="message" wrap="soft">{{ source }}</textarea>
           <br>  
           <input type="submit" value="Translate"> 
 
@@ -68,7 +70,7 @@ body {
         <hr>
 
         <div>
-            <div class="textarea" style="overflow:scroll;">{{ text1 }}</div>
+            <div class="textarea" rows="10" cols="60" style="overflow:scroll;">{{ text1 }}</div>
         </div>
         {% if text2 %}
         <hr>
@@ -83,21 +85,6 @@ body {
   $('#srcbox').on('change', function(){
     console.log($('#srcbox').val());
     $(this).closest('form').submit();
-    
-    // $('#tgtbox').html('');
-    // // $('#tgt').append('{% for key, value in api_models[src].items() %} <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option> {% endfor %}');
-    // $('#tgtbox').append('{% for key, value in api_models["xx"].items() %} <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option> {% endfor %}');
-    // console.log($('#tgtbox').val());
-    // if($('#typeOfGlass').val()==15){
-        
-    //     $('#glassWidth').append('<option value="20">20</option>');
-    //     $('#glassWidth').append('<option value="21">21</option>');
-    // }else{
-    //     $('#glassWidth').append('<option value="6">6</option>');
-    //     $('#glassWidth').append('<option value="7">7</option>');
-    //     $('#glassWidth').append('<option value="8">8</option>');
-    //     $('#glassWidth').append('<option value="9">9</option>');
-    // }
 });
 </script>
 

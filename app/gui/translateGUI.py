@@ -22,12 +22,15 @@ INIT_TGT = "en"
 
 def get_language_info():
     translate_url = mt_service_url + "/translate/languages"
+    api_languages = {}
+    api_models = {}
 
     try:
         r = httpx.get(translate_url)
     except httpx.HTTPError as exc:
         print(f"Error while requesting {exc.request.url!r}.")
         print(exc)
+        return api_languages, api_models
 
     if r.status_code == 200:
         response = r.json()
@@ -38,8 +41,6 @@ def get_language_info():
     else:
         print("Error retrieving language list")
         print(response['detail'])
-        api_languages = {}
-        api_models = {}
 
     return api_languages, api_models
 
@@ -47,8 +48,12 @@ def get_language_info():
 @app.get("/")
 def form_get(request: Request):
     api_languages, api_models = get_language_info()
+    print(api_models)
 
-    return templates.TemplateResponse('translate.html', context={'request': request, 'api_languages':api_languages, 'api_models':api_models, 'src':INIT_SRC, 'tgt':INIT_TGT, 'source': INIT_MESSAGE, 'text1': '', 'text2': ''})
+    src_select = INIT_SRC if INIT_SRC in api_models else ''
+    tgt_select = INIT_TGT if INIT_TGT in api_models else ''
+
+    return templates.TemplateResponse('translate.html', context={'request': request, 'api_languages':api_languages, 'api_models':api_models, 'src':src_select, 'tgt':tgt_select, 'source': INIT_MESSAGE, 'text1': '', 'text2': ''})
 
 
 @app.post("/")
