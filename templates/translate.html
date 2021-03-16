@@ -46,14 +46,14 @@ body {
           <!-- <div style="text-align:center;"> -->
 
           <label>Language</label>
-          <select id="srcbox" name="src" style="width:100px;">
+          <select id="srcbox" name="src" style="width:150px;">
              {% for key, value in api_models.items() %}
                 <option value={{key}} {% if src == key %} selected {% endif %} >{{ api_languages[key] }}</option>
              {% endfor %}
 
               <!-- <option value="fr" {% if type == "text"%} selected {% endif %}>French</option> -->
           </select>
-          <select id="tgtbox" name="tgt" style="width:100px;">
+          <select id="tgtbox" name="tgt" style="width:150px;">
               {% if src in api_models %}
                {% for key, value in api_models[src].items() %}
                   <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option>

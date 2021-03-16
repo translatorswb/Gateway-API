@@ -38,7 +38,7 @@ class LanguagesResponse(BaseModel):
     languages: Dict
     models: Dict
 
-@router.get ("/")
+@router.get('/')
 async def languages():
     translate_url = mt_service_url + "/translate/languages"
     try:
@@ -46,14 +46,16 @@ async def languages():
     except httpx.HTTPError as exc:
         print(f"Error while requesting {exc.request.url!r}.")
         print(exc)
-        return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
+        #return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
+        raise HTTPException(status_code=503, detail="Translate service unavailable")
 
     if r.status_code == 200:
         response = r.json()
         languages_response = LanguagesResponse(languages=response['languages'], models=response['models'])
         return languages_response
     else:
-        return ErrorResponseModel("Translate service error", 500, r.json()['detail'])
+        #return ErrorResponseModel("Translate service error", 500, r.json()['detail'])
+        raise HTTPException(status_code=500, detail="Translate service error: %s"%r.json()['detail'])
 
 
 @router.post('/', status_code=200)
@@ -61,11 +63,13 @@ async def translate(request: ServiceRequest):
     #Authenticate
     token = await check_token(request.token)
     if not token:
-        return ErrorResponseModel("Not authorized", 401, "Bad token")
+        #return ErrorResponseModel("Not authorized", 401, "Bad token")
+        raise HTTPException(status_code=401, detail="Token not found in database")
 
     #Check if token has service permission
     if not SERVICE_ID in token['services']:
-        return ErrorResponseModel("Not authorized", 403, "Token not authorized to service: %s"%SERVICE_ID)
+        #return ErrorResponseModel("Not authorized", 403, "Token not authorized to service: %s"%SERVICE_ID)
+        raise HTTPException(status_code=403, detail="Token not authorized to service: %s"%SERVICE_ID)
 
     print("Request from %s"%token['client'])
 
@@ -92,14 +96,16 @@ async def translate(request: ServiceRequest):
 
         usage_load = sum([len(text.split()) for text in request.batch])
     else:
-        return ErrorResponseModel("Request error", 400, "Need input in batch or text")
+        #return ErrorResponseModel("Request error", 400, "Need input in batch or text")
+        raise HTTPException(status_code=400, detail="Need input in batch or text")
 
     try:
         r = httpx.post(translate_service_url, json=json_data)
     except httpx.HTTPError as exc:
         print(f"Error while requesting {exc.request.url!r}.")
         print(exc)
-        return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
+        #return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
+        raise HTTPException(status_code=503, detail="Translate service unavailable")
 
     if r.status_code == 200:
         #Store usage
@@ -113,4 +119,6 @@ async def translate(request: ServiceRequest):
             service_response = SentenceResponse(translation=response['translation'], usage=usage_load)
         return service_response
     else:
-        return ErrorResponseModel("Translate service error", 500, r.json()['detail'])
+        #return ErrorResponseModel("Translate service error", 500, r.json()['detail'])
+        raise HTTPException(status_code=500, detail="Translate service error: %s"%r.json()['detail'])
+
