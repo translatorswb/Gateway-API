@@ -230,6 +230,14 @@ async def revoke_token(clientname:str):
 
 # Usage operations
 
+MODEL_TAG_SEPARATOR = "-"
+
+def get_model_id(src, tgt, alt_id=None):
+    model_id = src + MODEL_TAG_SEPARATOR + tgt
+    if alt_id:
+        model_id += MODEL_TAG_SEPARATOR + alt_id
+    return model_id
+
 async def register_usage(token:dict, service: str, model_info:dict, usage_load:dict) -> dict:
     usage_data = {'client':token['client'], 'token':token['token'], 'date':datetime.now(), 'service':service, 'load':usage_load, 'model':model_info}
     await usage_collection.insert_one(usage_data)
@@ -261,12 +269,18 @@ async def query_usage(service: str, client: str = None, year: int = None, month:
         cursor = usage_collection.find({'service': service, 'client':client, 'date': {'$lt': end_limit, '$gt': start_limit}})
 
     total = 0
+    totals = {}
     usage_list = []
     async for document in cursor:
         total += document['load']
+        if 'model' in document:
+            model_id = get_model_id(document['model']['src'], document['model']['tgt'])
+            if not model_id in totals:
+                totals[model_id] = 0
+            totals[model_id] += document['load']
         usage_list.append({d:document[d] for d in data_fields if d in document})
 
-    result = {'Total': total, 'Details': usage_list}
+    result = {'Total': total, 'Models': totals, 'Details': usage_list}
 
     return result, {'detail': 'Success'}
 
