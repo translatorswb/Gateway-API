@@ -50,8 +50,18 @@ def form_get(request: Request):
     api_languages, api_models = get_language_info()
     print(api_models)
 
-    src_select = INIT_SRC if INIT_SRC in api_models else ''
-    tgt_select = INIT_TGT if INIT_TGT in api_models else ''
+    if INIT_SRC and INIT_SRC in api_models and INIT_TGT and INIT_TGT in api_models[INIT_SRC]:
+        src_select = INIT_SRC
+        tgt_select = INIT_TGT
+    elif len(api_models) >= 1:
+        #select first model
+        src_select = list(api_models)[0] 
+        tgt_select = list(api_models[src_select])[0]
+    else:
+        src_select = ''
+        tgt_select = ''
+
+    print("Select: %s-%s"%(src_select,tgt_select))
 
     return templates.TemplateResponse('translate.html', context={'request': request, 'api_languages':api_languages, 'api_models':api_models, 'src':src_select, 'tgt':tgt_select, 'source': INIT_MESSAGE, 'text1': '', 'text2': ''})
 
@@ -65,7 +75,7 @@ async def form_post(request: Request):
 
     api_languages, api_models = get_language_info()
 
-    if message and tgt in api_models[src]:
+    if message and src in api_models and tgt in api_models[src]:
         translate_service_url = mt_service_url + "/translate"
         
         json_data = {'src':src, 
@@ -79,7 +89,8 @@ async def form_post(request: Request):
 
             if r.status_code == 200:
                 usage_load = len(message.split())
-                await register_usage(FAKE_GUI_TOKEN, SERVICE_ID, usage_load)  #TODO: register this in a separate table (register_gui_usage)
+                model_info = {'src':src, 'tgt':tgt}
+                await register_usage(FAKE_GUI_TOKEN, SERVICE_ID, model_info, usage_load)  #TODO: register this in a separate table (register_gui_usage)
 
                 response = r.json()
                 result = response['translation']

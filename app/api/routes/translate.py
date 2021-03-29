@@ -109,7 +109,12 @@ async def translate(request: ServiceRequest):
 
     if r.status_code == 200:
         #Store usage
-        await register_usage(token, SERVICE_ID, usage_load)
+        if request.alt:
+            model_info = {'src':request.src, 'tgt':request.tgt, 'alt':request.alt}
+        else:
+            model_info = {'src':request.src, 'tgt':request.tgt}
+        
+        await register_usage(token, SERVICE_ID, model_info, usage_load)
 
         response = r.json()
         print(response)

@@ -230,14 +230,12 @@ async def revoke_token(clientname:str):
 
 # Usage operations
 
-async def register_usage(token:dict, service: str, usage_load:dict) -> dict:
-    usage_data = {'client':token['client'], 'token':token['token'], 'date':datetime.now(), 'service':service, 'load':usage_load}
+async def register_usage(token:dict, service: str, model_info:dict, usage_load:dict) -> dict:
+    usage_data = {'client':token['client'], 'token':token['token'], 'date':datetime.now(), 'service':service, 'load':usage_load, 'model':model_info}
     await usage_collection.insert_one(usage_data)
 
 async def query_usage(service: str, client: str = None, year: int = None, month: int = None):
-    
-
-    data_fields = ['load', 'date', 'token']
+    data_fields = ['load', 'model', 'date', 'token']
     if not client and not year and not month:
         cursor = usage_collection.find({'service': service})
         data_fields = ['client'] + data_fields
@@ -266,7 +264,7 @@ async def query_usage(service: str, client: str = None, year: int = None, month:
     usage_list = []
     async for document in cursor:
         total += document['load']
-        usage_list.append({d:document[d] for d in data_fields})
+        usage_list.append({d:document[d] for d in data_fields if d in document})
 
     result = {'Total': total, 'Details': usage_list}
 
