@@ -230,12 +230,14 @@ async def revoke_token(clientname:str):
 
 # Usage operations
 
-MODEL_TAG_SEPARATOR = "-"
-
-def get_model_id(src, tgt, alt_id=None):
-    model_id = src + MODEL_TAG_SEPARATOR + tgt
-    if alt_id:
-        model_id += MODEL_TAG_SEPARATOR + alt_id
+def get_model_id(service, model_info):
+    if service == 'translate':
+        model_id = model_info['src'] + "-" + model_info['tgt']
+        if 'alt' in model_info:
+            model_id += "-" + model_info['alt']
+    else:
+        print("WARNING: Unknown service",service)
+        model_id = "-".join(list(model_info.values())) 
     return model_id
 
 async def register_usage(token:dict, service: str, model_info:dict, usage_load:dict) -> dict:
@@ -274,7 +276,7 @@ async def query_usage(service: str, client: str = None, year: int = None, month:
     async for document in cursor:
         total += document['load']
         if 'model' in document:
-            model_id = get_model_id(document['model']['src'], document['model']['tgt'])
+            model_id = get_model_id(service, document['model'])
             if not model_id in totals:
                 totals[model_id] = 0
             totals[model_id] += document['load']
