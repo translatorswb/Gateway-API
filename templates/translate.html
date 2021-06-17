@@ -1,6 +1,10 @@
 <html>
 <head>
 
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+ 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 .flask-pagedown-input {
 }
@@ -14,8 +18,8 @@ body {
   padding: 20px;
 }
 .content {
-  max-width: 500px;
-  margin: auto;
+  max-width: 100%;
+  margin: 5px;
 }
 .textarea {
   width: 100%;
@@ -24,8 +28,12 @@ body {
   box-sizing: border-box;
   border: 2px solid #ccc;
   border-radius: 4px;
-  resize: vertical;
+  resize: none;
   font-size:90%;
+}
+.disclaimer {
+  font-size:15;
+  text-align: right;
 }
 .button {
   font-size:100%;
@@ -33,52 +41,47 @@ body {
 }
 
 </style>
-<title>TWB MT</title>
+<title>Gamayun Demo</title>
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 </head>
-<body>
-    <div class="content" style="width: 500px;">
-        <h1 background-color: #FCFCFC;>TWB MT API Demo</h1>
-        <hr>
-
-        <br>
+<body style="background-color:#F4F7FC;">
+    <h1 background-color: #FCFCFC;>TWB Machine Translation API Demo</h1>
+    <br>
+    <br>
+    <div class="form-group">
         <form id="myForm" method="POST">
-          <!-- <div style="text-align:center;"> -->
-
-          <label>Language</label>
-          <select id="srcbox" name="src" style="width:150px;">
-             {% for key, value in api_models.items() %}
-                <option value={{key}} {% if src == key %} selected {% endif %} >{{ api_languages[key] }}</option>
-             {% endfor %}
-
-              <!-- <option value="fr" {% if type == "text"%} selected {% endif %}>French</option> -->
-          </select>
-          <select id="tgtbox" name="tgt" style="width:150px;">
-              {% if src in api_models %}
-               {% for key, value in api_models[src].items() %}
-                  <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option>
-               {% endfor %}
-              {% endif %}
-          </select>
-          <br>
-          <textarea class="textarea" name="message" maxlength="1000" wrap="soft">{{ source }}</textarea>
-          <br>  
-          <input type="submit" value="Translate"> 
+          <div style="width: 100%; display: table;">
+              <div style="display: table-row">
+                  <div style="width: 49%; display: table-cell;">
+                    <select id="srcbox" name="src" style="width:150px;">
+                       {% for key, value in api_models.items() %}
+                          <option value={{key}} {% if src == key %} selected {% endif %} >{{ api_languages[key] }}</option>
+                       {% endfor %}
+                    </select>
+                    <br>
+                    <textarea class="form-control" name="message" maxlength="{{ maxlength }}" wrap="soft" style="height:150px;resize: vertical;">{{ source }}</textarea>
+                    <input type="submit" value="Translate"> 
+                  </div>
+                  <div style="width: 2%; display: table-cell;"></div>
+                  <div style="width: 49%; display: table-cell;">
+                    <select id="tgtbox" name="tgt" style="width:150px;">
+                      {% if src in api_models %}
+                       {% for key, value in api_models[src].items() %}
+                          <option value={{key}} {% if tgt == key %} selected {% endif %} >{{ api_languages[key] }}</option>
+                       {% endfor %}
+                      {% endif %}
+                    </select>
+                    <br>
+                    <textarea class="form-control" style="height:150px;background-color: #fff;resize: vertical;" readonly>{{ text1 }}</textarea>
+                    <div class="disclaimer">
+                      {{ disclaimer }}
+                    </div>
+              </div>
+          </div>
 
         </form>
 
-        <hr>
-
-        <div>
-            <div class="textarea" rows="10" cols="60" style="overflow:scroll;">{{ text1 }}</div>
-        </div>
-        {% if text2 %}
-        <hr>
-        <div>
-            <p>Readable</p>
-            <div class="textarea" style="overflow:scroll;">{{ text2 }}</div>
-        </div>
-        {% endif %}
+        
     </div>
 
 <script>
