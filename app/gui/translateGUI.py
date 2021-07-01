@@ -21,7 +21,7 @@ INIT_SRC = "fr"
 INIT_TGT = "en"
 
 def get_language_info():
-    translate_url = mt_service_url + "/translate/languages"
+    translate_url = mt_service_url + "/translate"
     api_languages = {}
     api_models = {}
 
@@ -40,7 +40,6 @@ def get_language_info():
  
     else:
         print("Error retrieving language list")
-        print(response['detail'])
 
     return api_languages, api_models
 
