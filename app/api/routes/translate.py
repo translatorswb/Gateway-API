@@ -40,7 +40,7 @@ class LanguagesResponse(BaseModel):
 
 @router.get('/')
 async def languages():
-    translate_url = mt_service_url + "/translate/languages"
+    translate_url = mt_service_url + "/translate"
     try:
         r = httpx.get(translate_url)
     except httpx.HTTPError as exc:
