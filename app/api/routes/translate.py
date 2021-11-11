@@ -100,7 +100,7 @@ async def translate(request: ServiceRequest):
         raise HTTPException(status_code=400, detail="Need input in batch or text")
 
     try:
-        r = httpx.post(translate_service_url, json=json_data)
+        r = httpx.post(translate_service_url, json=json_data, timeout=None)
     except httpx.HTTPError as exc:
         print(f"Error while requesting {exc.request.url!r}.")
         print(exc)
