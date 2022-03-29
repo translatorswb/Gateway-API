@@ -39,6 +39,7 @@ class LanguagesResponse(BaseModel):
     models: Dict
 
 @router.get('/')
+@router.get('')
 async def languages():
     translate_url = mt_service_url + "/translate"
     try:
@@ -48,7 +49,6 @@ async def languages():
         print(exc)
         #return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
         raise HTTPException(status_code=503, detail="Translate service unavailable")
-
     if r.status_code == 200:
         response = r.json()
         languages_response = LanguagesResponse(languages=response['languages'], models=response['models'])
@@ -59,6 +59,7 @@ async def languages():
 
 
 @router.post('/', status_code=200)
+@router.post('', status_code=200)
 async def translate(request: ServiceRequest):
     #Authenticate
     token = await check_token(request.token)
