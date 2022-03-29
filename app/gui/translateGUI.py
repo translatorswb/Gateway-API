@@ -72,27 +72,29 @@ async def form_post(request: Request):
     src = form['src']
     tgt = form['tgt']
 
+    segments = [s.replace('\r','') for s in message.split("\n")]
+
     api_languages, api_models = get_language_info()
 
-    if message and src in api_models and tgt in api_models[src]:
-        translate_service_url = mt_service_url + "/translate"
+    if segments and src in api_models and tgt in api_models[src]:
+        translate_service_url = mt_service_url + "/translate/batch"
         
         json_data = {'src':src, 
                      'tgt':tgt,
-                     'text':message}
+                     'texts':segments}
 
         print(json_data)
 
         try:
-            r = httpx.post(translate_service_url, json=json_data)
+            r = httpx.post(translate_service_url, json=json_data, timeout=None)
 
             if r.status_code == 200:
-                usage_load = len(message.split())
+                usage_load = len(' '.join(segments).split())
                 model_info = {'src':src, 'tgt':tgt}
                 await register_usage(FAKE_GUI_TOKEN, SERVICE_ID, model_info, usage_load)  #TODO: register this in a separate table (register_gui_usage)
 
                 response = r.json()
-                result = response['translation']
+                result = '\n'.join(response['translation'])
             else:
                 result = r.json()['detail']
         except httpx.HTTPError as exc:
