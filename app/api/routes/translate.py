@@ -16,6 +16,7 @@ MT_API_HOST_URL = 'http://localhost:8001/api/v1'
 mt_service_url = os.environ.get('MT_API_HOST_URL') or MT_API_HOST_URL
 
 SERVICE_ID = 'translate'
+DEVDEBUG = True
 
 #HTTP operations
 class ServiceRequest(BaseModel):
@@ -72,7 +73,7 @@ async def translate(request: ServiceRequest):
         #return ErrorResponseModel("Not authorized", 403, "Token not authorized to service: %s"%SERVICE_ID)
         raise HTTPException(status_code=403, detail="Token not authorized to service: %s"%SERVICE_ID)
 
-    print("Request from %s"%token['client'])
+    print(f"Request from {token['client']} [{request.src}-{request.tgt}]")
 
     batch_request = False
     if request.text:
@@ -118,7 +119,7 @@ async def translate(request: ServiceRequest):
         await register_usage(token, SERVICE_ID, model_info, usage_load)
 
         response = r.json()
-        print(response)
+        if DEVDEBUG: print(response)
         if batch_request:
             service_response = BatchResponse(translation=response['translation'], usage=usage_load)
         else:
@@ -126,5 +127,6 @@ async def translate(request: ServiceRequest):
         return service_response
     else:
         #return ErrorResponseModel("Translate service error", 500, r.json()['detail'])
+        print("Translate service error: %s"%r.json()['detail'])
         raise HTTPException(status_code=500, detail="Translate service error: %s"%r.json()['detail'])
 

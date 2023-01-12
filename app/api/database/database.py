@@ -173,14 +173,8 @@ async def check_token(tokenstr:str):
     token = await token_collection.find_one({"token": tokenstr})
     if token:
         if token['active']:
-            print("active token")
             return token_helper(token)
-        else:
-            print("token not active")
-    else:
-        #Token not found. 
-        print("token not found")
-        return 0
+    return 0
 
 async def deactivate_token(tokenstr:str):
     token = await token_collection.find_one({"token": tokenstr})
