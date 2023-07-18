@@ -18,6 +18,9 @@ mt_service_url = os.environ.get('MT_API_HOST_URL') or MT_API_HOST_URL
 SERVICE_ID = 'translate'
 DEVDEBUG = True
 
+TORCH_SERVE_URL = os.getenv('TORCH_SERVE_URL', 'http://torchserve:8080')
+
+
 #HTTP operations
 class ServiceRequest(BaseModel):
     src: str = Field(...)
@@ -75,9 +78,12 @@ async def translate(request: ServiceRequest):
 
     print(f"Request from {token['client']} [{request.src}-{request.tgt}]")
 
+    translate_service_url = f"{TORCH_SERVE_URL}/predictions/nllb-200-1.3B"
+
     batch_request = False
     if request.text:
-        translate_service_url = mt_service_url + "/translate"
+        # translate_service_url = mt_service_url + "/translate"
+        
 
         if request.alt:
             json_data = {'src':request.src, 'tgt':request.tgt, 'alt':request.alt, 'text':request.text}
@@ -89,25 +95,33 @@ async def translate(request: ServiceRequest):
 
     elif request.batch:
         batch_request = True
-        translate_service_url = mt_service_url + "/translate/batch"
+        # translate_service_url = mt_service_url + "/translate/batch"
 
-        if request.alt:
-            json_data = {'src':request.src, 'tgt':request.tgt, 'alt':request.alt, 'texts':request.batch}
-        else:
-            json_data = {'src':request.src, 'tgt':request.tgt, 'alt':request.alt, 'texts':request.batch}
+        json_data = {
+            "sample": request.batch,
+            "additional_info": {
+                "src": request.src,
+                "tgt": request.tgt
+            }
+        }
+
+        # if request.alt:
+        #     json_data = {'src':request.src, 'tgt':request.tgt, 'alt':request.alt, 'texts':request.batch}
+        # else:
+        #     json_data = {'src':request.src, 'tgt':request.tgt, 'alt':request.alt, 'texts':request.batch}
 
         usage_load = sum([len(text.split()) for text in request.batch])
     else:
         #return ErrorResponseModel("Request error", 400, "Need input in batch or text")
         raise HTTPException(status_code=400, detail="Need input in batch or text")
 
-    try:
-        r = httpx.post(translate_service_url, json=json_data, timeout=None)
-    except httpx.HTTPError as exc:
-        print(f"Error while requesting {exc.request.url!r}.")
-        print(exc)
-        #return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
-        raise HTTPException(status_code=503, detail="Translate service unavailable")
+    # try:
+    r = httpx.post(translate_service_url, json=json_data, timeout=None)
+    # except httpx.HTTPError as exc:
+    #     print(f"Error while requesting {exc.request.url!r}.")
+    #     print(exc)
+    #     #return ErrorResponseModel("Internal request error", 503, "Translate service unavailable")
+    #     raise HTTPException(status_code=503, detail="Translate service unavailable")
 
     if r.status_code == 200:
         #Store usage
